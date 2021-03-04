@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width">
     <link rel="alternate icon" class="js-site-favicon" type="image/png" href="https://github.githubassets.com/favicons/favicon.png">
     <link rel="icon" class="js-site-favicon" type="image/svg+xml" href="https://github.githubassets.com/favicons/favicon.svg">
+    <title>课表生成器</title>
     <script defer src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script defer src="main.js"></script>
     <style>
@@ -17,7 +18,7 @@
       .title {
         text-align: center;
       }
-      select, input, .loading {
+      select, input {
         margin-left: 1cm;
         min-width: 2cm;
       }
@@ -26,15 +27,22 @@
         padding-right: 0.5cm;
         text-align: center;
       }
-      body {
+      body, html {
         font-family: "'Sarasa UI SC', 'Microsoft Yahei', SimHei";
+        margin: 0;
+        padding: 0;
       }
       .footer {
-        margin-top: 30%;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 100px;
+      }
+      .loaded, .loading {
+        margin-left: 1.5cm;
       }
       .loaded {
         display: none;
-        margin-left: 1cm;
       }
     </style>
   </head>
