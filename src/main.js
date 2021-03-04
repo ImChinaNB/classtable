@@ -2,18 +2,221 @@
   let rooms = data.classrooms
   let lessons = data.lessons
   let days = data.days
-  let selects = []
+  let sel = data.selective
+  let selects = {}
+  sel.forEach(i => {
+    selects[i] = []
+  })
   days.forEach(i => {
     lessons[i].forEach(i => i.forEach(j => {
+      j = j.replace("自", "")
       if (j.indexOf('-') >= 0) {
-        if (!selects.includes(j)) selects.push(j)
+        sel.forEach(k => {
+          if (j.indexOf(k) >= 0) {
+            if (!selects[k].includes(j)) selects[k].push(j)
+          }
+        })
       }
     }))
   })
-  console.log(selects)
+  {
+    const o = $("#selects")
+    const n = "select-xz"
+    let f = "<select id=\"" + n + "\">"
+    rooms.forEach(i => {
+      f += "<option value=\"" + i + "\">" + i + "</option>"
+    })
+    f += "</select>"
+    o.append(f)
+  }
+  sel.forEach(i => {
+    selects[i].sort()
+    const o = $("#selects")
+    const n = "select-" + i
+    // o.append("<div id=\"" + n + "-div\"></div>")
+    // const p = $("#" + n + "-div")
+    let f = "<select id=\"" + n + "\">"
+    selects[i].forEach(j => {
+      f += "<option value=\"" + j + "\">" + j + "</option>"
+    })
+    f += "</select>"
+    o.append(f)
+  })
+  // console.log(selects)
+  $("select").change(() => {
+    let s = []
+    sel.forEach(i => {
+      if (s === false) return
+      let v = $("#select-" + i).children('option:selected').val()
+      if (!v) {
+        $("#status").removeClass("ok").addClass("bad").text("请选择所有科目。")
+        s = false
+        return
+      }
+      s.push(v)
+    })
+    let xz = rooms.indexOf($("#select-xz").children('option:selected').val())
+    console.log(s)
+    if (s == false) return
+    $("#table").html("")
+    let htm = "<table border=1><tr><th>/</th>"
+    days.forEach(day => {
+      htm += "<th>" + day + "</th>"
+    })
+    htm += "</tr>"
+    const wid = lessons[days[0]].length
+    let fail = false
+    for (let i=0; i<wid; ++i) {
+      if (fail) break
+      htm += "<tr><th>" + (i+1).toString() + "</th>"
+      days.forEach(day => {
+        const al = lessons[day][i]
+        let has = false
+        s.forEach(cl => {
+          al.forEach(alc => {
+            if (alc.indexOf(cl) >= 0) {
+              if (has) {
+                fail = true
+                return
+              }
+              has = alc
+            }
+          })
+        })
+        if (fail) return
+        if (!has) has = al[xz]
+        htm += "<td>" + has + "</td>"
+      })
+      htm += "</tr>"
+    }
+    htm += "</table>"
+    if (fail) {
+      $("#status").removeClass("ok").addClass("bad").text("该选课可能性不存在。")
+    } else {
+      $("#status").addClass("ok").removeClass("bad").text("成功生成课表。")
+      $("#table").html(htm)
+    }
+  })
+  $("#number").change(() => {
+    let val = 0
+    try {
+      val = parseInt($("#number").val())
+      if (!(val >= 1 && val <= 48)) throw 0;
+    } catch (e) {
+      $("#status").removeClass("ok").addClass("bad").text("请输入合法的数字。")
+      $("#number").val("")
+      return
+    }
+
+    let s = data.idr[val-1]
+    for (let i=0; i<sel.length; ++i) {
+      selects[sel[i]].forEach(j => {
+        if (s[i].indexOf(j) >= 0) {
+          s[i] = j
+        } else {
+          $("#status").removeClass("ok").addClass("bad").text("出现未知错误。")
+          return
+        }
+      })
+    }
+    let xz = 8
+    console.log(s)
+    $("#table").html("")
+    let htm = "<table border=1><tr><th>/</th>"
+    days.forEach(day => {
+      htm += "<th>" + day + "</th>"
+    })
+    htm += "</tr>"
+    const wid = lessons[days[0]].length
+    let fail = false
+    for (let i=0; i<wid; ++i) {
+      if (fail) break
+      htm += "<tr><th>" + (i+1).toString() + "</th>"
+      days.forEach(day => {
+        const al = lessons[day][i]
+        let has = false
+        s.forEach(cl => {
+          al.forEach(alc => {
+            if (alc.indexOf(cl) >= 0) {
+              if (has) {
+                fail = true
+                return
+              }
+              has = alc
+            }
+          })
+        })
+        if (fail) return
+        if (!has) has = al[xz]
+        htm += "<td>" + has + "</td>"
+      })
+      htm += "</tr>"
+    }
+    htm += "</table>"
+    if (fail) {
+      $("#status").removeClass("ok").addClass("bad").text("该选课可能性不存在。")
+    } else {
+      $("#status").addClass("ok").removeClass("bad").text("成功生成课表。")
+      $("#table").html(htm)
+    }
+  })
+  $(".loading").fadeOut(() => {
+    $(".loaded").fadeIn()
+  })
 })({
   'classrooms': ["1班","2班","3班","4班","5班","6班","7班","8班","9班","10班","11班","蓝1","蓝2","蓝3","蓝4","1311","1409","1411"],
   'days': ['星期一', '星期二', '星期三', '星期四', '星期五'],
+  'selective': ['物','化','生','政','史','地'],
+  'idr': [
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生I-3 05班","政II-4 16班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政I-9 15班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政I-9 15班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政I-9 15班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-1 02班","政I-9 15班","史II-4 13班","地I-4 09班"],
+    ["物I-3 08班","化II-9 11班","生II-5 08班","政II-6 18班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政I-9 15班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-1 02班","政I-9 15班","史II-4 13班","地I-4 09班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物I-3 08班","化I-5 08班","生II-1 02班","政II-3 13班","史II-4 13班","地I-4 09班"],
+    ["物I-3 08班","化I-5 08班","生I-7 15班","政II-4 16班","史II-3 12班","地II-4 12班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政II-6 18班","史I-5 08班","地I-1 02班"],
+    ["物I-3 08班","化II-9 11班","生II-5 08班","政I-8 17班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化II-7 09班","生I-3 05班","政I-8 17班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政II-6 18班","史I-5 08班","地I-1 02班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物I-3 08班","化I-5 08班","生II-1 02班","政I-2 03班","史II-4 13班","地II-4 12班"],
+    ["物I-3 08班","化I-5 08班","生I-7 15班","政II-4 16班","史II-3 12班","地II-4 12班"],
+    ["物I-3 08班","化I-5 08班","生I-7 15班","政II-4 16班","史II-3 12班","地II-4 12班"],
+    ["物I-3 08班","化I-5 08班","生II-1 02班","政II-3 13班","史II-4 13班","地I-4 09班"],
+    ["物II-8 08班","化I-5 08班","生I-3 05班","政II-4 16班","史I-5 08班","地II-6 16班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政II-6 18班","史I-5 08班","地I-1 02班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物I-3 08班","化I-5 08班","生II-1 02班","政I-2 03班","史II-4 13班","地II-4 12班"],
+    ["物I-3 08班","化II-9 11班","生II-5 08班","政I-8 17班","史II-3 12班","地I-4 09班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政II-6 18班","史I-5 08班","地I-1 02班"],
+    ["物II-8 08班","化II-7 09班","生I-3 05班","政I-8 17班","史II-3 12班","地I-4 09班"],
+    ["物II-8 08班","化II-7 09班","生I-3 05班","政I-8 17班","史II-3 12班","地I-4 09班"],
+    ["物II-8 08班","化I-5 08班","生II-1 02班","政I-9 15班","史II-4 13班","地I-4 09班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政I-9 15班","史I-5 08班","地II-6 16班"],
+    ["物I-3 08班","化II-9 11班","生II-5 08班","政I-8 17班","史I-5 08班","地II-6 16班"],
+    ["物I-3 08班","化I-5 08班","生II-1 02班","政I-2 03班","史II-4 13班","地II-4 12班"],
+    ["物II-8 08班","化I-5 08班","生II-5 08班","政I-9 15班","史I-5 08班","地II-6 16班"],
+    ["物I-3 08班","化I-5 08班","生I-7 15班","政II-4 16班","史II-3 12班","地II-4 12班"],
+    ["物II-8 08班","化II-8 10班","生II-5 08班","政I-9 15班","史I-5 08班","地I-5 10班"],
+    ["物I-3 08班","化I-5 08班","生I-7 15班","政II-4 16班","史II-3 12班","地II-4 12班"],
+    ["物I-3 08班","化I-5 08班","生II-1 02班","政II-3 13班","史II-4 13班","地I-4 09班"]
+  ],
   'lessons': {
     '星期一': [["化II-1","物II-2","物II-3","生II-2","物II-5","化II-6","","生II-5","化II-7","史II-2","物II-10","政II-2","史II-4","","","政II-4","地II-3","地II-7"],
       ["物II-1","化II-2","地II-2","化II-4","生II-3","物II-6","政II-1","物II-8","生II-6","生II-7","化II-9","地II-4","政II-3","","","","史II-5","史II-6"],
@@ -39,7 +242,7 @@
       ["外","语","外","语","外","语","外","语","外","数","外","语","外","语","外","","",""],
       ["数","外","数","外","数","外","数","外","数","外","语","外","数","外","数","","",""],
       ["语","数","语","数","语","数","语","数","语","语","数","数","语","数","语","","",""],
-      ["劳","劳","劳","劳","劳","劳","劳","","科","科","科","科","科","科","科","","",""],
+      ["劳","劳","劳","劳","劳","劳","劳","科","科","科","科","科","科","科","科","","",""],
       ["科","科","科","科","科","科","科","劳","劳","劳","劳","劳","劳","劳","劳","","",""],
       ["体活","体活","体活","体活","体活","体活","体活","体活","体活","体活","体活","体活","体活","体活","体活","","",""]],
     '星期四': [["数","外","数","外","数","外","数","外","数","外","语","外","数","外","数","","",""],
