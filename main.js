@@ -119,7 +119,7 @@
         }
       })
     }
-    let xz = 8
+    let xz = 7
     console.log(s)
     $("#table").html("")
     let htm = "<table border=1><tr><th>/</th>"
